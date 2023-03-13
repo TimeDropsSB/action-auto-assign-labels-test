@@ -1,0 +1,57 @@
+name: Assign label to open PR
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  assign-labels:
+    runs-on: ubuntu-latest
+
+    env:
+      PR_TITLE: ${{ github.event.pull_request.title }}
+      PR_BODY: ${{ github.event.pull_request.body }}
+
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Remove all labels
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.removeAllLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            })
+
+      - name: Assign labels
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: (() => {
+                const theLabels = [];
+
+                if (process.env.PR_TITLE.startsWith('feat')) {
+                  theLabels.push('type: feat');
+                }
+
+                if (process.env.PR_TITLE.startsWith('fix')) {
+                  theLabels.push('type: fix');
+                }
+
+                if (process.env.PR_BODY.includes('# JIRA1-')) {
+                  theLabels.push('task: JIRA1');
+                }
+
+                if (process.env.PR_BODY.includes('# JIRA2-')) {
+                  theLabels.push('task: JIRA2');
+                }
+
+                return theLabels;
+              })()
+            })
