@@ -2,6 +2,9 @@ name: Assign label to open PR
 on:
   pull_request:
     types: [opened, edited]
+  push:
+    branches:
+      - main
 
 jobs:
   assign-labels:
@@ -55,4 +58,3 @@ jobs:
                 return theLabels;
               })()
             })
-
